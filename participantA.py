@@ -8,23 +8,27 @@ participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
 
 accountA = 100
 preparedValue = 0
+clockValue = None
 
 def get():
     return accountA
 
-def prepare(value):
+def prepare(value, clock):
     global accountA
     global preparedValue
+    global clockValue
     if accountA + value >= 0:
         preparedValue = value
+        clockValue = clock
         return True
     else:
         return False
 
-def commit(value):
+def commit(value, clock):
     global accountA
     global preparedValue
-    if preparedValue == value:
+    global clockValue
+    if preparedValue == value and clockValue == clock:
         accountA = accountA + value
         return True
     else:

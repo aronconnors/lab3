@@ -8,23 +8,27 @@ participantB = SimpleXMLRPCServer(("localhost", 50002))
 
 accountB = 100
 preparedValue = 0
+clockValue = None
 
 def get():
     return accountB
 
-def prepare(value):
+def prepare(value, clock):
     global accountB
     global preparedValue
+    global clockValue
     if accountB + value >= 0:
         preparedValue = value
+        clockValue = clock
         return True
     else:
         return False
 
-def commit(value):
+def commit(value, clock):
     global preparedValue
     global accountB
-    if preparedValue == value:
+    global clockValue
+    if preparedValue == value and clockValue == clock:
         accountB = accountB + value
         return True
     else:

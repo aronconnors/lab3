@@ -5,6 +5,7 @@ import xmlrpc.client
 coordinator = SimpleXMLRPCServer(("localhost", 50000))
 participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
 participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
+clock = 0
 
 def get(account):
     if account == "a":
@@ -15,17 +16,19 @@ def get(account):
         return "Fuck you"
     
 def transfer(source, dest, amount):
+    global clock
+    clock += 1
     if source == "a" and dest == "b" and amount >= 0:
-        if participantA.prepare(amount*-1) and participantB.prepare(amount):
-            if participantA.commit(amount*-1) and participantB.commit(amount):
+        if participantA.prepare(amount*-1, clock) and participantB.prepare(amount, clock):
+            if participantA.commit(amount*-1, clock) and participantB.commit(amount, clock):
                 return "success"
             else:
                 return "failure1"
         else:
             return "failure2"
     elif source == "b" and dest == "a" and amount >= 0:
-        if participantB.prepare(amount*-1) and participantA.prepare(amount):
-            if participantB.commit(amount*-1) and participantA.commit(amount):
+        if participantB.prepare(amount*-1, clock) and participantA.prepare(amount, clock):
+            if participantB.commit(amount*-1, clock) and participantA.commit(amount, clock):
                 return "success"
             else:
                 return "failure1"
