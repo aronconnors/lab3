@@ -1,41 +1,64 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-#import os
+import socket
+import os
+import sys
+import time
 
+socket.setdefaulttimeout(5.0)
 coordinator = SimpleXMLRPCServer(("localhost", 50000))
 participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
 participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
 clock = 0
 
 def get(account):
-    if account == "a":
-        return participantA.get()
-    elif account == "b":
-        return participantB.get()
-    else:
-        return "Fuck you"
+    try:
+        if account == "a":
+            return participantA.get()
+        elif account == "b":
+            return participantB.get()
+        else:
+            return "Invalid account"
+    except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault) as e:
+        return f"Error retrieving balance for account {account}: {e}"
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
     
 def transfer(source, dest, amount):
     global clock
     clock += 1
-    if source == "a" and dest == "b" and amount >= 0:
-        if participantA.prepare(amount*-1, clock) and participantB.prepare(amount, clock):
-            if participantA.commit(amount*-1, clock) and participantB.commit(amount, clock):
-                return "success"
+    try:
+        if source == "a" and dest == "b" and amount >= 0:
+            try:
+                prepareA = participantA.prepare(amount*-1, clock)
+            except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                return "Participant A timeout during prepare phase."
+            try:
+                prepareB = participantB.prepare(amount, clock)
+            except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                return "Participant B timeout during prepare phase."
+
+            if prepareA and prepareB:
+                try:
+                    commitA = participantA.commit(amount*-1, clock)
+                except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                    return "Participant A timeout during commit phase."
+
+                try:
+                    commitB = participantB.commit(amount, clock)
+                except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                    return "Participant B timeout during commit phase."
+
+                if commitA and commitB:
+                    return "success"
+                else:
+                    return "failure during commit phase"
             else:
-                return "failure1"
+                return "failure during prepare phase"
         else:
-            return "failure2"
-    elif source == "b" and dest == "a" and amount >= 0:
-        if participantB.prepare(amount*-1, clock) and participantA.prepare(amount, clock):
-            if participantB.commit(amount*-1, clock) and participantA.commit(amount, clock):
-                return "success"
-            else:
-                return "failure1"
-        else:
-            return "failure2"
-    else:
-        return "Fuck you"
+            return "Invalid transfer parameters"
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 
 coordinator.register_function(get,"get")
