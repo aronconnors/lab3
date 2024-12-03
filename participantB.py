@@ -1,22 +1,43 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-#import os
+import os
+import sys
+import time
 
 coordinator = xmlrpc.client.ServerProxy("http://localhost:50000")
 participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
 participantB = SimpleXMLRPCServer(("localhost", 50002))
 
-accountB = 100
+if len(sys.argv) > 1:
+    initialBal = int(sys.argv[1])
+else:
+    initialBal = 100
+
+accountFile = "accountB.txt"
 preparedValue = 0
 clockValue = None
 
+def readAccount():
+    if os.path.exists(accountFile):
+        with open(accountFile, 'r') as f:
+            return int(f.read())
+    else:
+        with open(accountFile, 'w') as f:
+            f.write(str(initialBal))
+        return initialBal
+
+def writeAccount(value):
+    with open(accountFile, 'w') as f:
+        f.write(str(value))
+        
 def get():
-    return accountB
+    return readAccount()
 
 def prepare(value, clock):
-    global accountB
     global preparedValue
     global clockValue
+    accountB = readAccount()
+
     if accountB + value >= 0:
         preparedValue = value
         clockValue = clock
@@ -26,9 +47,10 @@ def prepare(value, clock):
 
 def commit(value, clock):
     global preparedValue
-    global accountB
     global clockValue
+
     if preparedValue == value and clockValue == clock:
+        accountB = readAccount()
         accountB = accountB + value
         return True
     else:
