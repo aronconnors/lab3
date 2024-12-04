@@ -4,28 +4,26 @@ import os
 import sys
 import time
 
-coordinator = xmlrpc.client.ServerProxy("http://localhost:50000")
-participantA = SimpleXMLRPCServer(("localhost", 50001), logRequests=False)
-participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
+#coordinator = xmlrpc.client.ServerProxy("http://10.128.0.16:50000")
+participantA = SimpleXMLRPCServer(("10.128.0.17", 50001), allow_none=True)
+#participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
 
 accountFile = "accountA.txt"
 
-#Checking if there is a file/inputted account value
-if len(sys.argv) > 1:
-    initialBal = int(sys.argv[1])
+simulateCrash = ""
+
+def start(initialBal, crash):
+    global accountFile
+    global simulateCrash
     with open(accountFile, 'w') as f:
-            f.write(str(initialBal))
-else:
-    initialBal = 100
-
-if len(sys.argv) > 2:
-    crash = sys.argv[2]
-else:
-    crash = None
-
+        f.write(str(initialBal))
+    simulateCrash = crash
+    preparedValue = 0
+    clockValue = 0
+    return 'success'
 
 preparedValue = 0
-clockValue = None
+clockValue = 0
 
 def readAccount():
     if os.path.exists(accountFile):
@@ -47,16 +45,16 @@ def prepare(value, clock):
     global preparedValue
     global clockValue
 
-    if crash == "before_prepare":
+    if simulateCrash == "before_prepare":
         print("ParticipantA: simulating crash prior to prepare")
-        time.sleep(60)
+        time.sleep(6)
     accountA = readAccount()
     if accountA + value >= 0:
         preparedValue = value
         clockValue = clock
-        if crash == "after_prepare":
+        if simulateCrash == "after_prepare":
             print("ParticipantA: simulating crash after prepare")
-            time.sleep(60)
+            time.sleep(6)
         return True
     else:
         return False
@@ -72,6 +70,7 @@ def commit(value, clock):
     else:
         return False
 
+participantA.register_function(start,"start")
 participantA.register_function(get,"get")
 participantA.register_function(prepare,"prepare")
 participantA.register_function(commit,"commit")

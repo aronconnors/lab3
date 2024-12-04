@@ -6,9 +6,9 @@ import sys
 import time
 
 socket.setdefaulttimeout(5.0)
-coordinator = SimpleXMLRPCServer(("localhost", 50000), logRequests=False)
-participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
-participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
+coordinator = SimpleXMLRPCServer(("10.128.0.16", 50000), allow_none=True)
+participantA = xmlrpc.client.ServerProxy("http://10.128.0.17:50001", allow_none=True)
+participantB = xmlrpc.client.ServerProxy("http://10.128.0.18:50002", allow_none=True)
 clock = 0
 
 def get(account):
@@ -95,7 +95,12 @@ def bonus():
     except Exception as e:
         return f"An error occurred: {e}"
 
+def start(aValue, bValue, crash):
+    participantA.start(aValue, crash)
+    participantB.start(bValue)
+    return 'Success'
 
+coordinator.register_function(start, "start")
 coordinator.register_function(get,"get")
 coordinator.register_function(transfer,"transfer")
 coordinator.register_function(bonus,"bonus")

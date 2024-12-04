@@ -4,26 +4,28 @@ import os
 import sys
 import time
 
-coordinator = xmlrpc.client.ServerProxy("http://localhost:50000")
-participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
-participantB = SimpleXMLRPCServer(("localhost", 50002), logRequests=False)
+#coordinator = xmlrpc.client.ServerProxy("http://10.128.0.16:50000")
+#participantA = xmlrpc.client.ServerProxy("http://10.128.0.18:50001")
+participantB = SimpleXMLRPCServer(("10.128.0.18", 50002), allow_none=True)
 
 accountFile = "accountB.txt"
-
-if len(sys.argv) > 1:
-    initialBal = int(sys.argv[1])
-    with open(accountFile, 'w') as f:
-            f.write(str(initialBal))
-else:
-    initialBal = 100
-
 preparedValue = 0
-clockValue = None
+clockValue = 0
+
+def start(initialBal):
+    global accountFile
+    with open(accountFile, 'w') as f:
+        f.write(str(initialBal))
+    preparedValue = 0
+    clockValue = 0
+    return 'success'
 
 def readAccount():
     if os.path.exists(accountFile):
         with open(accountFile, 'r') as f:
             return int(f.read())
+    else:
+        return "Problem"
 
 def writeAccount(value):
     with open(accountFile, 'w') as f:
@@ -56,6 +58,7 @@ def commit(value, clock):
     else:
         return False
 
+participantB.register_function(start,"start")
 participantB.register_function(get,"get")
 participantB.register_function(prepare,"prepare")
 participantB.register_function(commit,"commit")
