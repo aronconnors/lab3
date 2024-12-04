@@ -6,9 +6,9 @@ import os
 
 def reset():
     if os.path.exists('accountA.txt'):
-        os.remove('accountA.txt')
+        open('accountA.txt', 'w').close()
     if os.path.exists('accountB.txt'):
-        os.remove('accountB.txt')
+        open('accountB.txt', 'w').close()
 
 def startCoordinator():
     return subprocess.Popen(["python3", "coordinator.py"])
@@ -43,6 +43,7 @@ def end(A,B):
 def scenarioA(coordinator):
     print("Scenario A:")
     reset()
+    #transfer
     participantA = startParticipantA(200)
     participantB = startParticipantB(300)
     time.sleep(1)
@@ -50,12 +51,18 @@ def scenarioA(coordinator):
     result = coordinator.transfer("a","b",100)
     print(result)
     printBalances(coordinator)
-    #add bonus after
+    #bonus
+    time.sleep(1)
+    print("Bonus transaction")
+    result = coordinator.bonus()
+    print(result)
+    printBalances(coordinator)
     end(participantA,participantB)
 
 def scenarioB(coordinator):
     print("scenario B:")
     reset()
+    #transfer
     participantA = startParticipantA(90)
     participantB = startParticipantB(50)
     time.sleep(1)
@@ -63,7 +70,12 @@ def scenarioB(coordinator):
     result = coordinator.transfer("a","b",100)
     print(result)
     printBalances(coordinator)
-    #add bonus after
+    #bonus
+    time.sleep(1)
+    print("Bonus transaction")
+    result = coordinator.bonus()
+    print(result)
+    printBalances(coordinator)
     end(participantA,participantB)
 
 def scenarioCi(coordinator):

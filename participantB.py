@@ -6,14 +6,17 @@ import time
 
 coordinator = xmlrpc.client.ServerProxy("http://localhost:50000")
 participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
-participantB = SimpleXMLRPCServer(("localhost", 50002))
+participantB = SimpleXMLRPCServer(("localhost", 50002), logRequests=False)
+
+accountFile = "accountB.txt"
 
 if len(sys.argv) > 1:
     initialBal = int(sys.argv[1])
+    with open(accountFile, 'w') as f:
+            f.write(str(initialBal))
 else:
     initialBal = 100
 
-accountFile = "accountB.txt"
 preparedValue = 0
 clockValue = None
 
@@ -21,10 +24,6 @@ def readAccount():
     if os.path.exists(accountFile):
         with open(accountFile, 'r') as f:
             return int(f.read())
-    else:
-        with open(accountFile, 'w') as f:
-            f.write(str(initialBal))
-        return initialBal
 
 def writeAccount(value):
     with open(accountFile, 'w') as f:
@@ -52,6 +51,7 @@ def commit(value, clock):
     if preparedValue == value and clockValue == clock:
         accountB = readAccount()
         accountB = accountB + value
+        writeAccount(accountB)
         return True
     else:
         return False

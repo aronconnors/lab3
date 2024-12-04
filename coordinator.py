@@ -6,7 +6,7 @@ import sys
 import time
 
 socket.setdefaulttimeout(5.0)
-coordinator = SimpleXMLRPCServer(("localhost", 50000))
+coordinator = SimpleXMLRPCServer(("localhost", 50000), logRequests=False)
 participantA = xmlrpc.client.ServerProxy("http://localhost:50001")
 participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
 clock = 0
@@ -59,8 +59,44 @@ def transfer(source, dest, amount):
             return "Invalid transfer parameters"
     except Exception as e:
         return f"An error occurred: {e}"
+    
+def bonus():
+    global clock
+    clock += 1
+    try:
+        a_amount = participantA.get()
+        bonus_amt = int(a_amount*0.2)
+        try:
+            prepareA = participantA.prepare(bonus_amt, clock)
+        except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+            return "Participant A timeout during prepare phase."
+        try:
+            prepareB = participantB.prepare(bonus_amt, clock)
+        except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+            return "Participant B timeout during prepare phase."
+
+        if prepareA and prepareB:
+            try:
+                commitA = participantA.commit(bonus_amt, clock)
+            except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                return "Participant A timeout during commit phase."
+
+            try:
+                commitB = participantB.commit(bonus_amt, clock)
+            except (socket.timeout, ConnectionRefusedError, xmlrpc.client.Fault):
+                return "Participant B timeout during commit phase."
+
+            if commitA and commitB:
+                return "success"
+            else:
+                return "failure during commit phase"
+        else:
+            return "failure during prepare phase"
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 
 coordinator.register_function(get,"get")
 coordinator.register_function(transfer,"transfer")
+coordinator.register_function(bonus,"bonus")
 coordinator.serve_forever()

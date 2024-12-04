@@ -5,12 +5,16 @@ import sys
 import time
 
 coordinator = xmlrpc.client.ServerProxy("http://localhost:50000")
-participantA = SimpleXMLRPCServer(("localhost", 50001))
+participantA = SimpleXMLRPCServer(("localhost", 50001), logRequests=False)
 participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
+
+accountFile = "accountA.txt"
 
 #Checking if there is a file/inputted account value
 if len(sys.argv) > 1:
     initialBal = int(sys.argv[1])
+    with open(accountFile, 'w') as f:
+            f.write(str(initialBal))
 else:
     initialBal = 100
 
@@ -19,7 +23,7 @@ if len(sys.argv) > 2:
 else:
     crash = None
 
-accountFile = "accountA.txt"
+
 preparedValue = 0
 clockValue = None
 
