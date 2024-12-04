@@ -1,16 +1,13 @@
 from xmlrpc.server import SimpleXMLRPCServer
-import xmlrpc.client
 import os
-import sys
 import time
 
-#coordinator = xmlrpc.client.ServerProxy("http://10.128.0.16:50000")
-participantA = SimpleXMLRPCServer(("10.128.0.17", 50001), allow_none=True)
-#participantB = xmlrpc.client.ServerProxy("http://localhost:50002")
+participantA = SimpleXMLRPCServer(("localhost", 50001), allow_none=True)
 
 accountFile = "accountA.txt"
-
 simulateCrash = ""
+preparedValue = 0
+clockValue = 0
 
 def start(initialBal, crash):
     global accountFile
@@ -22,17 +19,12 @@ def start(initialBal, crash):
     clockValue = 0
     return 'success'
 
-preparedValue = 0
-clockValue = 0
-
 def readAccount():
     if os.path.exists(accountFile):
         with open(accountFile, 'r') as f:
             return int(f.read())
     else:
-        with open(accountFile, 'w') as f:
-            f.write(str(initialBal))
-        return initialBal
+        return "problem"
 
 def writeAccount(value):
     with open(accountFile, 'w') as f:

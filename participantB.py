@@ -1,12 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
-import xmlrpc.client
 import os
-import sys
-import time
 
-#coordinator = xmlrpc.client.ServerProxy("http://10.128.0.16:50000")
-#participantA = xmlrpc.client.ServerProxy("http://10.128.0.18:50001")
-participantB = SimpleXMLRPCServer(("10.128.0.18", 50002), allow_none=True)
+participantB = SimpleXMLRPCServer(("localhost", 50002), allow_none=True)
 
 accountFile = "accountB.txt"
 preparedValue = 0

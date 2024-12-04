@@ -1,30 +1,9 @@
 import xmlrpc.client
-import subprocess
 import time
-import os
 
 def start(aValue, bValue, crash):
     return coordinator.start(aValue, bValue, crash)
     
-#def reset():
-#    coordinator.reset()
-    #if os.path.exists('accountA.txt'):
-    #    open('accountA.txt', 'w').close()
-    #if os.path.exists('accountB.txt'):
-    #    open('accountB.txt', 'w').close()
-
-#def startCoordinator():
-#    return subprocess.Popen(["python3", "coordinator.py"])
-
-#def startParticipantA(initialBal, crash=None):
-#    args = ["python3","participantA.py", str(initialBal)]
-#    if crash:
-#        args.append(crash)
-#    return subprocess.Popen(args)
-
-#def startParticipantB(initialBal):
-#    return subprocess.Popen(["python3","participantB.py",str(initialBal)])
-
 def printBalances(coordinator):
     try:
         ABal = coordinator.get("a")
@@ -38,17 +17,10 @@ def printBalances(coordinator):
     print(f"Account A: {ABal}")
     print(f"Account B: {BBal}")
 
-#def end(A,B):
-#    A.terminate()
-#    B.terminate()
-#    time.sleep(1)
-
 def scenarioA(coordinator):
     print("Scenario A:")
     start(200, 300, 'no_crash')
     #transfer
-    #participantA = startParticipantA(200)
-    #participantB = startParticipantB(300)
     time.sleep(1)
     printBalances(coordinator)
     time.sleep(1)
@@ -62,15 +34,11 @@ def scenarioA(coordinator):
     result = coordinator.bonus()
     print(result)
     printBalances(coordinator)
-    #end(participantA,participantB)
 
 def scenarioB(coordinator):
     print("scenario B:")
-    #reset()
     #transfer
     start(90, 50, 'no_crash')
-    #participantA = startParticipantA(90)
-    #participantB = startParticipantB(50)
     time.sleep(1)
     printBalances(coordinator)
     time.sleep(1)
@@ -84,14 +52,11 @@ def scenarioB(coordinator):
     result = coordinator.bonus()
     print(result)
     printBalances(coordinator)
-    #end(participantA,participantB)
 
 def scenarioCi(coordinator):
     print("scenario C.i")
     #reset()
     start(200, 300, "before_prepare")
-    #participantA = startParticipantA(200, "before_prepare")
-    #participantB = startParticipantB(300)
     time.sleep(1)
     printBalances(coordinator)
     time.sleep(1)
@@ -99,15 +64,10 @@ def scenarioCi(coordinator):
     result = coordinator.transfer("a","b",100)
     print(result)
     printBalances(coordinator)
-    #add bonus? not sure if we add them here
-    #end(participantA,participantB)
 
 def scenarioCii(coordinator):
     print("scenario C.ii")
-    #reset()
     start(200, 300, "after_prepare")
-    #participantA = startParticipantA(200, "after_prepare")
-    #participantB = startParticipantB(300)
     time.sleep(1)
     printBalances(coordinator)
     time.sleep(1)
@@ -115,13 +75,9 @@ def scenarioCii(coordinator):
     result = coordinator.transfer("a","b",100)
     print(result)
     printBalances(coordinator)
-    #add bonus? not sure if we add them here
-    #end(participantA,participantB) 
 
 if __name__ == "__main__":
-    #c = startCoordinator()
-    #time.sleep(1)
-    coordinator = xmlrpc.client.ServerProxy("http://10.128.0.16:50000", allow_none=True)
+    coordinator = xmlrpc.client.ServerProxy("http://localhost:50000", allow_none=True)
     while True:
         print("\n1 - Scenario A")
         print("2 - Scenario B")
@@ -138,6 +94,5 @@ if __name__ == "__main__":
         elif scen == "4":
             scenarioCii(coordinator)
         elif scen == "exit":
-            #c.terminate()
             time.sleep(1)
             break
